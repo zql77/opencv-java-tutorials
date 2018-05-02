@@ -3,12 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to OpenCV Java Tutorials documentation!
+欢迎来到OpenCV的Java教程文件。
 =================================================
 
-.. note:: We are in the process to update these tutorials to use Java 8, only.
+.. note:: 我们正在更新这些教程以支持Java 8。
 
-Contents:
+内容:
 
 .. toctree::
    :maxdepth: 2
@@ -23,7 +23,7 @@ Contents:
    08-object-detection
    09-camera-calibration
 
-Indices and tables
+表格索引
 ==================
 
 * :ref:`genindex`

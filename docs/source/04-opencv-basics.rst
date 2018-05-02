@@ -1,21 +1,21 @@
 =============
-OpenCV Basics
+OpenCV基础
 =============
 
-.. note:: We assume that by now you have already read the previous tutorials. If not, please check previous tutorials at `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_. You can also find the source code and resources at `<https://github.com/opencv-java/>`_
+.. 注意::我们现在假设你已经阅读过前面的教程。 如果没有，请查看 `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_的教程。你也可以在 `<https://github.com/opencv-java/>`_相关代码和资源。
 
-What we will do in this tutorial
+本教程中我们将要进行的操作
 --------------------------------
-In this guide, we will:
- * Create a basic *checkbox* interaction to alter the color of the video stream.
- * Add a basic *checkbox* interaction to "alpha over" a logo to the video stream.
- * Display the video stream *histogram* (both one and three channels).
+在本教程中，我们将会:
+ * 创建一个基本的*复选框（checkbox）* 交互的改变视频流的颜色。
+ * 添加一个基本的 *复选框（checkbox）* 交互的改变视频流的标志的 "阿尔法度（alpha over）"。
+ * 显示视频流的 *直方图* (不管是单通道还是三通道)。
 
-Getting started
+开始
 ---------------
-For this tutorial we can create a new JavaFX project and build a scene as the one realized in the previous one. So we've got a window with a border pane in which:
+对于本教程，我们可以创建一个新的JavaFX项目，我们像前面实现一个场景一样实现一个场景。我们会得到一个带边框的窗口，其中：
 
-- in the **BOTTOM** we have a button inside a *HBox*:
+- 在底部，我们在*HBox*中实现一个按钮:
 
 .. code-block:: xml
 
@@ -26,47 +26,47 @@ For this tutorial we can create a new JavaFX project and build a scene as the on
        <Button fx:id="button" alignment="center" text="Start camera" onAction="#startCamera" />
     </HBox>
 
-- in the **CENTER** we have a ImageView:
+- 在 **CENTER** 我们实现一个 ImageView:
 
 .. code-block:: xml
 
     <ImageView fx:id="currentFrame" />
 
-Color channel checkbox
+彩色通道复选框
 ----------------------
-Let's open our fxml file with Scene Builder and add to the **RIGHT** field of our BorderPane a vertical box ``VBox``. A VBox lays out its children in a single vertical column. If the VBox has a border and/or padding set, then the contents will be layed out within those insets. Also it will resize children (if resizable) to their preferred heights and uses its ``fillWidth`` property to determine whether to resize their widths to fill its own width or keep their widths to their preferred (fillWidth defaults to true).
-A ``HBox`` works just like a VBox but it lays out its children horizontally instead of vertically.
+用Scene Builder打开我们的fxml文件，同时将一个垂直布局的 ``VBox`` 添加到我们的BorderPane得 **RIGHT** 文件中。`` VBox `` 中的子元素都是单向垂直排列的。如果 `` VBox `` 设定了 `` border `` 或者 `` padding `` 属性, 则将内容放入这些标签中。 此外，还会调整子控件(如果大小可调)到适应的大小，``fillWidth`` 标签用来设定自己的大小是否是可自适应调整的，或者自己设定的大小（fillWidth默认值为true）。
+``HBox`` 和 `` VBox `` 工作原理一样，只是在他里面的子控件的排列方向是水平的。
 
-Now we can put inside the VBox a new checkbox, change its text to "Show in gray scale", and set an id (e.g., "grayscale").
+现在我们在 `` VBox `` 添加一个 `` checkbox ``, 将他的 `` text `` 属性设定为 "Show in gray scale", 同时设定他的ID (例如： "grayscale").
 
 .. code-block:: xml
 
     <CheckBox fx:id="grayscale" text="Show in gray scale" />
 
-Let's also add a title to this section by putting a text before our new checkbox, but still inside the VBox. Then, set its text to "Controls" (we can find the text element under the ``Shapes`` menu).
+让我们为 `` VBox `` 中的复选框。然后, 设置他的text属性为"Controls" (可以在 ``Shapes`` 菜单下找到text属性)。
 
 .. code-block:: xml
 
     <Text text="Controls" />
 
-In the Scene Builder we now have:
+在Scene Builder中我们最终得到:
 
 .. image:: _static/04-00.png
 
-The graphic interface is complete for the first task, now we need to work on the controller; in the previous tutorial we could control the number of channels displayed on screen with the line:
+第一项任务的图形界面已完成，现在我们要完善我们的控制器类；在之前的教程中，我们可以使用以下方式控制图像的颜色变换：
 
 .. code-block:: java
 
     Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2GRAY);
 
-In order to control this conversion with the check box, we have to link the check box with a FXML variable:
+为了使用复选框控制此转换，我们必须将复选框与FXML变量绑定起来：
 
 .. code-block:: java
 
     @FXML
     private CheckBox grayscale;
 
-Now we can implement the control by adding a simple "if" condition which will perform the conversion only if our check box is checked:
+现在我们可以通过添加一个简单的“if”条件语句来实现控制，该条件仅在我们的复选框被选中时才会执行转换：
 
 .. code-block:: java
 
@@ -75,11 +75,11 @@ Now we can implement the control by adding a simple "if" condition which will pe
        Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2GRAY);
     }
 
-Load an Image and Add it to the Stream
+加载图像并将其转换为视频流
 --------------------------------------
-The next step is to add another check box which, if checked, will trigger the display of an image over the camera stream.
-Let's start by adding the image to the project; create a new folder in the root directory of your project and put the image in there.
-In my project I have a ``resources`` folder with a ``Poli.png`` image.
+下一步是添加另一个复选框，当选中该复选框，将触发在相机流上显示图像。
+我们首先将图像添加到项目中; 在项目的根目录下创建一个新文件夹，并将图像放在那里。
+在我的项目里，我将``Poli.png``图像放到了``resources``文件夹里。
 Go back to Eclipse and refresh your project (you should have the new folder in it).
 Let's open the FXML file with Scene Builder and add a new checkbox below the one that controls the stream colors; we have to set the text, the name of the method in the ``OnAction`` field and an id.
 In the code we will have for example:
