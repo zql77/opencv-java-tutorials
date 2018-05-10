@@ -80,16 +80,16 @@ OpenCV基础
 下一步是添加另一个复选框，当选中该复选框，将触发在相机流上显示图像。
 我们首先将图像添加到项目中; 在项目的根目录下创建一个新文件夹，并将图像放在那里。
 在我的项目里，我将``Poli.png``图像放到了``resources``文件夹里。
-Go back to Eclipse and refresh your project (you should have the new folder in it).
-Let's open the FXML file with Scene Builder and add a new checkbox below the one that controls the stream colors; we have to set the text, the name of the method in the ``OnAction`` field and an id.
-In the code we will have for example:
+回到Eclipse中刷新工作区(你就会发现你新建立的文件夹)。
+然后我们使用Scene Builder打开FXML文件在控制颜色的复选框下面添加一个新的复选框; 我们需要设定``text``和``id``值, 同时还需要在``OnAction``字段设定回调方法的名称。
+比如我们这么写:
 
 .. code-block:: xml
 
     <CheckBox fx:id="logoCheckBox" text="Show logo" onAction="#loadLogo" />
 
-In the controller file we have to define a new variable associated with the checkbox, the method set on the ``OnAction`` field and adapt the code so that it will display the logo when the checkbox is checked and the stream is on.
-Variable:
+在控制器类中我们需要定义一个与复选框相关联的变量,``OnAction``字段中设定的方法使得复选框被选中时能够在视频上显示`` logo ``。
+变量:
 
 .. code-block:: java
 
@@ -97,10 +97,10 @@ Variable:
     private CheckBox logoCheckBox;
 
 
-``loadLogo`` method:
-In this method we are going to load the image whenever the logoCheckBox id selected (checked).
-In order to load the image we have to use a basic OpenCV function: imread.
-It returns a Mat and takes the path of the image and a flag (> 0 RGB image, =0 grayscale, <0 with the alpha channel).
+``loadLogo`` 方法:
+只要`` logoCheckBox ``被选中(被勾选)，我们就会通过这个方法加载图像。
+我们需要使用OpenCV的imread函数来加载图像。
+他需要两个参数，一个是输入图像，另一个是图像标志（> 0 RGB图像，= 0灰度，<alpha通道）,并返回Mat数据结。
 
 .. code-block:: java
 
@@ -111,58 +111,58 @@ It returns a Mat and takes the path of the image and a flag (> 0 RGB image, =0 g
         this.logo = Imgcodecs.imread("resources/Poli.png");
     }
 
-Adapt the code.
+修改这代码。
 
-We are going to add some variants to the code in order to display our logo in a specific region of the stream. This means that for each frame capture, before the image could be converted into 1 or 3 channels, we have to set a **ROI** (region of interest) in which we want to place the logo.
-Usually a ROI of an image is a portion of it, we can define the ROI as a Rect object.
-Rect is a template class for 2D rectangles, described by the following parameters:
+为了在视频流中显示我们的`` logo `` 我们需要对代码做一些修改。因此在捕获每一帧图像后，和将图像转换为1-3通道的图像流前，我们需要设定 **ROI** （感兴趣区域）并将``logo``添加到感兴趣区域。 This means that for each frame capture, before the image could be converted into 1 or 3 channels, we have to set a **ROI** (region of interest) in which we want to place the logo.
+通常ROI是图像的一部分，我们可以将ROI定义为Rect对象。
+Rect是2D矩形的模板类，以下是它的参数描述：
 
- * Coordinates of the top-left corner. This is a default interpretation of Rect.x and Rect.y in OpenCV. Though, in your algorithms you may count x and y from the bottom-left corner.
- * Rectangle width and height.
+ * 坐标原点。 这是OpenCV中Rect.x和Rect.y的默认是在左上角。当然，在你的算法中，你可以设定原点在左下角。
+ * 感兴趣矩形区域的宽和高。
 
 .. code-block:: java
 
     Rect roi = new Rect(frame.cols()-logo.cols(), frame.rows()-logo.rows(), logo.cols(), logo.rows());
 
-Then we have to take control of our Mat's ROI, by doing so we are able to "add" our logo in the disired area of the frame defined by the ROI.
+只有相同尺寸的Mat才可以进行相加，所以我们需要操纵ROI(感兴趣区域)，使得能够把我们添加的`` logo ``添加到每一帧设定的感兴趣区域内。
 
 .. code-block:: java
 
     Mat imageROI = frame.submat(roi);
 
-We had to make this operation because we can only "add" Mats with the same sizes; but how can we "add" two Mat together? We have to keep in mind that our logo could have 4 channels (RGB + alpha). So we could use two functions: ``addWeighted`` or ``copyTo``.
-The ``addWeighted`` function calculates the weighted sum of two arrays as follows:
+ 怎样将两个Mat数据结构相加呢? 我们知道我们的`` logo ``有4个通道 (RGB + alpha)。所以我们可以使用这两个函数: ``addWeighted`` 和 ``copyTo``。
+``addWeighted``函数计算两个数组的加权和，如下所示：
 
 		*dst(I)= saturate(src1(I)* alpha + src2(I)* beta + gamma)*
 
-where I is a multi-dimensional index of array elements. In case of multi-channel arrays, each channel is processed independently. The function can be replaced with a matrix expression:
+其中`` I ``是数组元素的多维索引。 在多通道阵列的情况下，每个通道都是独立处理的。 该函数可以用一个矩阵表达式替换：
 
 		*dst = src1*alpha + src2*beta + gamma*
 
-.. note:: Saturation is not applied when the output array has the depth ``CV_32S``. You may even get result of an incorrect sign in the case of overflow.
+.. 注意:: 当输出数组的深度是``CV_32S``时不应用饱和度。在溢出的情况下，我们会得不到正确的结果。
 
-Parameters:
- - **src1** first input array.
- - **alpha** weight of the first array elements.
- - **src2** second input array of the same size and channel number as src1.
- - **beta** weight of the second array elements.
- - **gamma** scalar added to each sum.
- - **dst** output array that has the same size and number of channels as the input arrays.
+参数:
+ - **src1** 第一个输入数组。
+ - **alpha** 第一个数组元素的权重。
+ - **src2** 与 **src1** 具有相同大小和通道编号的第二个输入数组。
+ - **beta** 第二个数组元素的权重。
+ - **gamma** 添加到每一个和的标量。
+ - **dst** 输出数组与输入数组具有相同大小和数量的通道。
 
-So we'll have:
+具体如下:
 
 .. code-block:: java
 
     Core.addWeighted(imageROI, 1.0, logo, 0.7, 0.0, imageROI);
 
-The second method (``copyTo``) simply copies a Mat into the other. We'll have:
+第二种``copyTo``方法只是简单的将一个Mat复制到另一个中。代码如下:
 
 .. code-block:: java
 
     Mat mask = logo.clone();
     logo.copyTo(imageROI, mask);
 
-Everything we have done so far to add the logo to the image has to perform only IF our checkbox is check and the image loading process has ended successfully. So we have to add an if condition:
+迄今为止，我们将`` logo ``添加到感兴趣区域的每一步操作都是建立在，复选框被选中，同时图像已经加载完成的情况下。所以我们必须添加一个if语句判断是否满足以上两个条件：
 
 .. code-block:: java
 
@@ -178,24 +178,24 @@ Everything we have done so far to add the logo to the image has to perform only 
 	// logo.copyTo(imageROI, mask);
     }
 
-Calculate a Histogram
+计算直方图
 ---------------------
-A histogram is a collected counts of data organized into a set of predefined bins.
-In our case the data represents the intensity of the pixel so it will have a range like (0, 256).
+直方图是数值数据分布的精确图形表示，由一个一个的区间表示为直方图。
+在我们的例子中，数据表示像素的亮度，所以它的范围四（0,256）。
 
-Since we know that the range of information value, we can segment our range in subparts (called bins); let's identify some parts of the histogram:
- 1. **dims**: The number of parameters you want to collect data of.
- 2. **bins**: It is the number of subdivisions in each dim. In our example, bins = 256
- 3. **range**: The limits for the values to be measured. In this case: range = [0,255]
+既然我们知道了每个像素值的范围，我们可以取一个一个像素值的范围（称为箱子），最后统计所有像素在这些范围的分布：
+ 1. **dims**: 你想要设定的“箱子”的个数。
+ 2. **bins**: 每个暗箱中的细分数。 在我们的例子中，bin = 256
+ 3. **range**: 要测量的值的范围。在我们的例子中：范围= [0,255]
 
-Our last goal is to display the histogram of the video stream for either RGB or in grayscale.
-For this task we are going to define a method in our controller class that takes a Mat (our current frame) and a boolean that will flag if the frame is in RGB or in grayscale, for example:
+我们的最后一个目标是显示RGB或灰度图像视频流的直方图。
+为此我们在控制器类中创建一个方法，它接受一个Mat(当前帧)，返回一个布尔值，判断图像是RGB还是灰度图像的。代码如下：
 
 .. code-block: java
 
     private void showHistogram(Mat frame, boolean gray){ ... }
 
-First thing we need to do is to divide the frame into other *n* frames, where *n* represents the number of channels of which our frame is composed. To do so we need to use the ``Core.split`` function; it needs a source Mat and a List<Mat> where to put the different channels. Obviously if the frame is in grayscale the list will have just one element.
+我们首先需要把当前帧分解为`` n ``个帧，`` n ``为我们图像的通道数，这需要利用 ``Core.split`` 函数完成。它需要一个Mat（输入图像）和一个List<Mat>（储存每个通道的图像副本，如果图像是灰度图片，那么List<Mat>将只有一个）。
 
 .. code-block: java
 
@@ -203,19 +203,19 @@ First thing we need to do is to divide the frame into other *n* frames, where *n
     Core.split(frame, images);
 
 
-Before we could calculate the histogram of each channel we have to prepare all the inputs that the ``calcHist`` function needs.
-The functions calcHist calculates the histogram of one or more arrays. The elements of a tuple used to increment a histogram bin are taken from the corresponding input arrays at the same location.
-Parameters:
+在我们计算每个通道的直方图之前，我们必须了解`` calcHist ``函数所需的所有参数。
+calcHist函数计算一个或多个数组的直方图。每一个归类都是输入数组中满足一定范围值的统计。
+参数:
 
- - **images** Source arrays. They all should have the same depth, CV_8U or CV_32F, and the same size. Each of them can have an arbitrary number of channels.
- - **channels** List of the dims channels used to compute the histogram. The first array channels are numerated from 0 to images[0].channels()-1, the second array channels are counted from images[0].channels() to images[0].channels() + images[1].channels()-1, and so on.
- - **mask** Optional mask. If the matrix is not empty, it must be an 8-bit array of the same size as images[i]. The non-zero mask elements mark the array elements counted in the histogram.
- - **hist** Output histogram, which is a dense or sparse dims -dimensional array.
- - **histSize** Array of histogram sizes in each dimension.
+ - **images** 源数组。 源数组都应具有相同的深度（如CV_8U或CV_32F）以及相同的尺寸。源数组可以有任意通道。
+ - **channels** 用于计算直方图的调光通道列表。第一个通道数组从 0 到 images[0].channels()-1, 第二个通道数组从 images[0].channels() 到 images[0].channels() + images[1].channels()-1, 如此下去。
+ - **mask**掩码数组。 如果矩阵不为空，则它必须是与images[i]大小相同的8位数组。 非零掩码元素标记在直方图中计数的数组元素。
+ - **hist** 输出直方图，它是一个密集或稀疏的dims -dimensional数组。
+ - **histSize** 每个维度中的直方图大小。
  - **ranges** Array of the dims arrays of the histogram bin boundaries in each dimension. When the histogram is uniform (uniform =true), then for each dimension i it is enough to specify the lower (inclusive) boundary L_0 of the 0-th histogram bin and the upper (exclusive) boundary U_(histSize[i]-1) for the last histogram bin histSize[i]-1. That is, in case of a uniform histogram each of ranges[i] is an array of 2 elements. When the histogram is not uniform (uniform=false), then each of ranges[i] contains histSize[i]+1 elements: L_0, U_0=L_1, U_1=L_2,..., U_(histSize[i]-2)=L_(histSize[i]-1), U_(histSize[i]-1). The array elements, that are not between L_0 and U_(histSize[i]-1), are not counted in the histogram.
- - **accumulate** Accumulation flag. If it is set, the histogram is not cleared in the beginning when it is allocated. This feature enables you to compute a single histogram from several sets of arrays, or to update the histogram in time.
+ - **accumulate**积累标志。 如果已ture，则直方图在分配时不会在开始时清除。 此功能使您能够从多组数组中计算单个直方图，或者及时更新直方图。
 
-The image will be our frame, we don't need a mask and the last flag will be false; thus we need to define the channels, the hist, the ``histSize`` and the ``ranges``:
+输入数组就是当前帧，不需要掩码数组，最后一个标志位设定为false;因此我们只需要定义通道数，输出数组hist,直方图的大小``histSize`` 和 ``ranges``:
 
 .. code-block: java
 
