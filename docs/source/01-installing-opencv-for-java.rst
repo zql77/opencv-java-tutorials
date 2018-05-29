@@ -51,7 +51,7 @@ Ant 将安装到 ``/usr/local/bin/ant`` 中。
 
 在Linux下安装OpenCV 3.x
 ---------------------------------
-请注意：Linux软件包管理系统（`apt-get`，`yum`等）可以提供发行版仓库中的OpenCV库版本。如果需要特定版本的OpenCV就需要自己编译，如果您想在Windows或MacOS下编译OpenCV，以下说明也很有用。
+.. note:: Linux软件包管理系统（`apt-get`，`yum`等）可以提供发行版仓库中的OpenCV库版本。如果需要特定版本的OpenCV就需要自己编译，如果您想在Windows或MacOS下编译OpenCV，以下说明也很有用。
 
 第一步，下载安装 `CMake <http://www.cmake.org/download/>`_ 和 `Apache Ant <http://ant.apache.org/>`_,或者运行 ''sudo apt-get install cmake cmake-gui ant'' 进行安装。成功安装好Cmake 和 Ant后，从 `OpenCV网站 <http://opencv.org/releases.html>`_ 下载OpenCV库源文件。
 解压下载的OpenCV源文件到本地目录(例如：~/opencv/)，并用CMake(cmake-gui)打开。
