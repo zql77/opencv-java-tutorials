@@ -2,7 +2,7 @@
 创建你的第一个使用OpenCV库的JavaFX程序
 =========================================
 
-.. 注意::我们现在假设你已经阅读过前面的教程。 如果没有，请查看 `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_的教程。你也可以在 `<https://github.com/opencv-java/>`_相关代码和资源。
+.. note:: 我们现在假设你已经阅读过前面的教程。 如果没有，请查看 `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_的教程。你也可以在 `<https://github.com/opencv-java/>`_相关代码和资源。
 
 创建你的第一个使用OpenCV库的JavaFX程序
 --------------------------------

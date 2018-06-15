@@ -2,7 +2,7 @@
 你的第一个OpenCV Java 程序
 =======================================
 
-.. 注意:: 我们假设您现在已经阅读了前面的教程。 如果没有，请在 `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_查看教程。 你也可以在`<https://github.com/opencv-java/>`_找到源代码和资源。
+.. note:: 我们假设您现在已经阅读了前面的教程。 如果没有，请在 `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_查看教程。 你也可以在`<https://github.com/opencv-java/>`_找到源代码和资源。
 
 一个使用 OpenCV 的Java程序
 ------------------------------
