@@ -33,7 +33,7 @@
 
 开始
 ---------------
-用通常的OpenCV用户库创建一个新的JavaFX项目（例如“CameraCalibration”）。
+用通常的OpenCV用户库创建一个新的JavaFX项目（例如 " CameraCalibration " ）。
 打开 Scene Builder 并添加一个边框窗格：
 
 - 在顶部，我们需要设置校准样本的数量，测试图像中水平角的数量，测试图像中垂直角的数量以及更新按钮 这个数据。 为了让事情变得更清洁，我们把所有这些元素都放入HBox中。
@@ -100,7 +100,7 @@
 
 		boolean found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners, Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
 
-``findChessboardCorners``函数试图确定输入图像是否是棋盘图案的视图，并找到内部棋盘角落。
+ " findChessboardCorners " 函数试图确定输入图像是否是棋盘图案的视图，并找到内部棋盘角落。
 参数如下:
 
  - **image** 源棋盘视图。 它必须是8位灰度或彩色图像。
@@ -141,7 +141,7 @@
  - **image** 目的地图像。 它必须是8位彩色图像。
  - **patternSize** 每个棋盘行和列的内角的数量。
  - **corners** 检测角落的阵列，输出检测到的角点
- - **patternWasFound** 指示是否找到完整的参数。 ``findChessboardCorners``的返回值应该在这里传递。
+ - **patternWasFound** 指示是否找到完整的参数。 " findChessboardCorners " 的返回值应该在这里传递。
 
 现在我们可以激活快照按钮来保存数据。
 
@@ -159,7 +159,7 @@
 
 保存数据
 -----------
-通过点击快照按钮，我们称之为“takeSnapshot”方法。 如果我们没有做足够的样本，我们需要保存数据（2D和3D点）：
+通过点击快照按钮，我们称之为 " takeSnapshot " 方法。 如果我们没有做足够的样本，我们需要保存数据（2D和3D点）：
 
 .. code-block:: java
 
@@ -188,12 +188,12 @@ calibrateCamera函数估计每个视图的内在摄像机参数和外部参数�
  - **objectPoints** 在新界面中，它是校准图案坐标空间中的校准图案点矢量的向量。 外部向量包含与模式视图数量一样多的元素。 这些点是3D的，但由于它们处于图案坐标系中，因此如果平台是平面的，则将模型放置到XY坐标平面以使每个输入对象点的Z坐标为0是有意义的。
  - **imagePoints** 它是校准模式点投影向量的向量。
  - **imageSize** 仅用于初始化内置相机矩阵的图像大小。
- - **cameraMatrix** 输出3x3浮点相机矩阵* A = | fx 0 cx | | 0 fy cy | | 0 0 1 | *。 如果指定了" CV_CALIB_USE_INTRINSIC_GUESS "或" CV_CALIB_FIX_ASPECT_RATIO "，则在调用函数之前，必须初始化* fx *，* fy *，* cx *，* cy *中的部分或全部。
+ - **cameraMatrix** 输出3x3浮点相机矩阵* A = | fx 0 cx | | 0 fy cy | | 0 0 1 | *。 如果指定了 " CV_CALIB_USE_INTRINSIC_GUESS " 或 " CV_CALIB_FIX_ASPECT_RATIO " ，则在调用函数之前，必须初始化* fx *，* fy *，* cx *，* cy *中的部分或全部。
  - **distCoeffs** 4，5或8个元素的失真系数的输出向量。
  - **rvecs** 为每个模式视图估计的旋转矢量的输出矢量。 也就是说，每个第k个旋转矢量与相应的第k个平移矢量一起。
  - **tvecs** 为每个模式视图估算的平移向量的输出向量。
 
-我们进行了校准并获得了具有失真系数的相机矩阵，我们可能需要使用``undistort``函数来校正图像：
+我们进行了校准并获得了具有失真系数的相机矩阵，我们可能需要使用 " undistort " 函数来校正图像：
 
 .. code-block:: java
 
@@ -205,6 +205,6 @@ calibrateCamera函数估计每个视图的内在摄像机参数和外部参数�
 	undistoredImage = mat2Image(undistored);
     }
 
-" undistort "功能可转换图像以补偿径向和切向镜头失真。
+ " undistort " 功能可转换图像以补偿径向和切向镜头失真。
 
 这个例子的源码在 `GitHub <https://github.com/opencv-java/getting-started/blob/master/FXHelloCV/>`_。
