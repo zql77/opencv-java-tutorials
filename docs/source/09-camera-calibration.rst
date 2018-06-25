@@ -1,49 +1,49 @@
 ==================
-Camera Calibration
+相机校准
 ==================
 
-.. note:: We assume that by now you have already read the previous tutorials. If not, please check previous tutorials at `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_. You can also find the source code and resources at `<https://github.com/opencv-java/>`_
+.. note:: 我们现在假设你已经阅读过前面的教程。 如果没有，请查看 `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_的教程。你也可以在 `<https://github.com/opencv-java/>`_相关代码和资源。
 
-.. warning:: This tutorial is *not* updated to OpenCV 3.0.
+.. warning:: 这个教程没有更新到OpenCV 3.x.
 
-Goal
+目标
 ----
-The goal of this tutorial is to learn how to calibrate a camera given a set of chessboard images.
+本教程的目标是学习如何在给定一组棋盘图像的情况下校准摄像机。
 
-What is the camera calibration?
+什么是相机校准？
 -------------------------------
-The camera calibration is the process with which we can obtain the camera parameters such as intrinsic and extrinsic parameters, distortions and so on. The calibration of the camera is often necessary when the alignment between the lens and the optic sensors chip is not correct; the effect produced by this wrong alignment is usually more visible in low quality cameras.
+相机校准是我们可以获得相机参数（如内部和外部参数，失真等）的过程。 当镜头和光学传感器芯片之间的对准不正确时，通常需要校准相机; 在低质量摄像机中，由错误对齐产生的效果通常更明显。
 
-Calibration Pattern
+校准模式
 -------------------
-As we said earlier we are going to need some sort of pattern that the program can recognize in order to make the calibration work. The pattern that we are going to use is a chessboard image.
+正如我们前面所说的，我们需要某种程序可以识别的模式来进行校准工作。 我们要使用的模式是棋盘图像。
 
 .. image:: _static/05-00.png
 
-The reason why we use this image is because there are some OpenCV functions that can recognize this pattern and draw a scheme which highlights the intersections between each block.
-To make the calibration work you need to print the chessboard image and show it to the cam; it is important to maintain the sheet still, better if stick to a surface.
-In order to make a good calibration, we need to have about 20 samples of the pattern taken from different angles and distances.
+我们使用这个图像的原因是因为有一些OpenCV函数可以识别这个模式并绘制一个突出显示每个块之间交集的方案。
+要进行校准工作，您需要打印棋盘图像并将其显示给凸轮; 保持纸张仍然很重要，如果粘在表面上会更好。
+为了做出好的校准，我们需要从不同的角度和距离获得大约20个样本。
 
-What we will do in this tutorial
+本教程中我们将要进行的操作
 --------------------------------
-In this guide, we will:
- * Create some TextEdit field to give some inputs to our program
- * Recognize the pattern using some OpenCV functions
- * Calibrate and show the video stream.
+在本教程中，我们将会:
+ * 创建一些TextEdit字段来为我们的程序提供一些输入
+ * 使用一些OpenCV函数识别模式
+ * 校准并显示视频流。
 
-Getting Started
+开始
 ---------------
-Create a new JavaFX project (e.g. "CameraCalibration") with the usual OpenCV user library.
-Open Scene Builder and add a Border Pane with:
+用通常的OpenCV用户库创建一个新的JavaFX项目（例如“CameraCalibration”）。
+打开 Scene Builder 并添加一个边框窗格：
 
-- on **TOP** we need to have the possibility to set the number of samples for the calibration, the number of horizontal corners we have in the test image, the number of vertical corners we have in the test image and a button to update this data. To make things cleaner let's put all these elements inside a HBox.
+- 在顶部，我们需要设置校准样本的数量，测试图像中水平角的数量，测试图像中垂直角的数量以及更新按钮 这个数据。 为了让事情变得更清洁，我们把所有这些元素都放入HBox中。
 
 .. code-block:: xml
 
     <HBox alignment="CENTER" spacing="10">
 
-Let's also add some labels before each text fields.
-Each text field is going to need an id, and let's put a standard value for them already.
+让我们在每个文本字段前添加一些标签。
+每个文本字段都需要一个id，我们已经为它们设置了一个标准值。
 
 .. code-block:: xml
 
@@ -54,96 +54,96 @@ Each text field is going to need an id, and let's put a standard value for them 
     <Label text="Vertical corners #" />
     <TextField fx:id="numVertCorners" text="6" maxWidth="50" />
 
-For the button instead, set the id and a method for the onAction field:
+对于该按钮，请为onAction字段设置id和方法：
 
 .. code-block:: xml
 
     <Button fx:id="applyButton" alignment="center" text="Apply" onAction="#updateSettings" />
 
-- on the **LEFT** add an ImageView inside a VBox for the normal cam stream; set an id for it.
+- 在** LEFT **上添加一个ImageView在一个VBox内的正常凸轮流; 为它设置一个ID。
 
 .. code-block:: xml
 
     <ImageView fx:id="originalFrame" />
 
-- on the **RIGHT** add an ImageView inside a VBox for the calibrated cam stream; set an id for it.
+- 在** RIGHT **上添加一个用于校准凸轮流的VBox内的ImageView; 为它设置一个ID。
 
 .. code-block:: xml
 
     <ImageView fx:id="originalFrame" />
 
-- in the **BOTTOM** add a start/stop cam stream button and a snapshot button inside a HBox; set an id and a action method for each one.
+-在** BOTTOM **中，在HBox内添加一个开始/停止采样视频流按钮和一个快照按钮; 为每一个设置一个id和一个操作方法。
 
 .. code-block:: xml
 
     <Button fx:id="cameraButton" alignment="center" text="Start camera" onAction="#startCamera" disable="true" />
     <Button fx:id="snapshotButton" alignment="center" text="Take snapshot" onAction="#takeSnapshot" disable="true" />
 
-Your GUI will look something like this:
+你的GUI看起来将会这是这样:
 
 .. image:: _static/05-03.png
 
-Pattern Recognition
+模式识别
 -------------------
-The calibration process consists on showing to the cam the chessboard pattern from different angles, depth and points of view. For each recognized pattern we need to track:
+校准过程包括从不同角度，深度和视角向凸轮显示棋盘图案。 对于我们需要跟踪的每个识别模式：
 
- - some reference system's 3D point where the chessboard is located (let's assume that the Z axe is always 0):
+ -棋盘所在的一些参考系统的3D点（让我们假设Z轴始终为0）：
 
 	.. code-block:: java
 
 		for (int j = 0; j < numSquares; j++)
 		   obj.push_back(new MatOfPoint3f(new Point3(j / this.numCornersHor, j % this.numCornersVer, 0.0f)));
 
- - the image's 2D points (operation made by OpenCV with findChessboardCorners):
+ - 图像的2D点（由OpenCV使用findChessboardCorners进行的操作):
 
 	.. code-block:: java
 
 		boolean found = Calib3d.findChessboardCorners(grayImage, boardSize, imageCorners, Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
 
-The ``findChessboardCorners`` function attempts to determine whether the input image is a view of the chessboard pattern and locate the internal chessboard corners.
-Its parameters are:
+``findChessboardCorners``函数试图确定输入图像是否是棋盘图案的视图，并找到内部棋盘角落。
+参数如下:
 
- - **image** Source chessboard view. It must be an 8-bit grayscale or color image.
- - **patternSize** Number of inner corners per a chessboard row and column
- - **corners** Output array of detected corners.
- - **flags** Various operation flags that can be zero or a combination of the following values:
-	- ``CV_CALIB_CB_ADAPTIVE_THRESH`` Use adaptive thresholding to convert the image to black and white, rather than a fixed threshold level (computed from the average image brightness).
-	- ``CV_CALIB_CB_NORMALIZE_IMAGE`` Normalize the image gamma with "equalizeHist" before applying fixed or adaptive thresholding.
-	- ``CV_CALIB_CB_FILTER_QUADS`` Use additional criteria (like contour area, perimeter, square-like shape) to filter out false quads extracted at the contour retrieval stage.
-	- ``CALIB_CB_FAST_CHECK`` Run a fast check on the image that looks for chessboard corners, and shortcut the call if none is found. This can drastically speed up the call in the degenerate condition when no chessboard is observed.
+ - **image** 源棋盘视图。 它必须是8位灰度或彩色图像。
+ - **patternSize** 每个棋盘行和列的内角的数量。
+ - **corners** 输出检测到的角落数组。
+ - **flags** 各种操作标志可以是零或以下值的组合：
+	- ``CV_CALIB_CB_ADAPTIVE_THRESH`` 使用自适应阈值将图像转换为黑白，而不是固定的阈值级别（从平均图像亮度计算）。
+	- ``CV_CALIB_CB_NORMALIZE_IMAGE`` 在应用固定或自适应阈值之前，使用“equalizeHist”对图像伽玛进行归一化。
+	- ``CV_CALIB_CB_FILTER_QUADS`` 使用额外的标准（如轮廓区域，周长，方形形状）来过滤在轮廓检索阶段提取的虚假四边形。
+	- ``CALIB_CB_FAST_CHECK`` 对查找棋盘角的图像执行快速检查，如果找不到任何内容，则快速调用该电话。 当没有观察到棋盘时，这可以极大地加速在退化状态下的呼叫。
 
-.. warning:: Before doing the ``findChessboardCorners`` convert the image to grayscale and save the board size into a Size variable:
+.. warning:: 在执行``findChessboardCorners``之前，将图像转换为灰度并将纸板大小保存为一个Size变量：
 
 	.. code-block:: java
 
 	    Imgproc.cvtColor(frame, grayImage, Imgproc.COLOR_BGR2GRAY);
 	    Size boardSize = new Size(this.numCornersHor, this.numCornersVer);
 
-If the recognition went well ``found`` should be ``true``.
+如果识别进行得很好，" 发现 " 应该是" 正确的 "。
 
-For square images the positions of the corners are only approximate. We may improve this by calling the ``cornerSubPix`` function. It will produce better calibration result.
+对于方形图像，角落的位置只是近似的。 我们可以通过调用 " cornerSubPix " 函数来改善这一点。 它会产生更好的校准结果。
 
 .. code-block:: java
 
     TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
     Imgproc.cornerSubPix(grayImage, imageCorners, new Size(11, 11), new Size(-1, -1), term);
 
-We can now highlight the found points on stream:
+我们现在可以突出显示在线发现的点：
 
 .. code-block:: java
 
     Calib3d.drawChessboardCorners(frame, boardSize, imageCorners, found);
 
-The function draws individual chessboard corners detected either as red circles if the board was not found, or as colored corners connected with lines if the board was found.
+该功能可以将检测到的单个棋盘角落绘制为红色圆圈（如果找不到该板），或者如果找到该板，则将彩色拐角与线连接。
 
-Its parameters are:
+参数如下:
 
- - **image** Destination image. It must be an 8-bit color image.
- - **patternSize** Number of inner corners per a chessboard row and column.
- - **corners** Array of detected corners, the output of findChessboardCorners.
- - **patternWasFound** Parameter indicating whether the complete board was found or not. The return value of ``findChessboardCorners`` should be passed here.
+ - **image** 目的地图像。 它必须是8位彩色图像。
+ - **patternSize** 每个棋盘行和列的内角的数量。
+ - **corners** 检测角落的阵列，输出检测到的角点
+ - **patternWasFound** 指示是否找到完整的参数。 ``findChessboardCorners``的返回值应该在这里传递。
 
-Now we can activate the Snapshot button to save the data.
+现在我们可以激活快照按钮来保存数据。
 
 .. code-block:: java
 
@@ -153,13 +153,13 @@ Now we can activate the Snapshot button to save the data.
 
 .. image:: _static/05-02.png
 
-We should take the set number of "snapshots" from different angles and depth, in order to make the calibration.
+我们应该从不同的角度和深度采集设置的“快照”数量，以便进行校准。
 
-.. note:: We don't actually save the image but just the data we need.
+.. note:: 我们实际上并没有保存图像，只是保存了我们需要的数据。
 
-Saving Data
+保存数据
 -----------
-By clicking on the snapshot button we call the ``takeSnapshot`` method. Here we need to save the data (2D and 3D points)  if we did not make enough sample:
+通过点击快照按钮，我们称之为“takeSnapshot”方法。 如果我们没有做足够的样本，我们需要保存数据（2D和3D点）：
 
 .. code-block:: java
 
@@ -167,11 +167,11 @@ By clicking on the snapshot button we call the ``takeSnapshot`` method. Here we 
     this.objectPoints.add(obj);
     this.successes++;
 
-Otherwise we can calibrate the camera.
+否则，我们可以校准相机。
 
-Camera Calibration
+相机校准
 ------------------
-For the camera calibration we should create initiate some needed variable and then call the actual calibration function:
+对于相机校准，我们应该创建一些需要的变量，然后调用实际的校准函数：
 
 .. code-block:: java
 
@@ -182,18 +182,18 @@ For the camera calibration we should create initiate some needed variable and th
 
     Calib3d.calibrateCamera(objectPoints, imagePoints, savedImage.size(), intrinsic, distCoeffs, rvecs, tvecs);
 
-The ``calibrateCamera`` function estimates the intrinsic camera parameters and extrinsic parameters for each of the views. The algorithm is based on [Zhang2000] and [BouguetMCT]. The coordinates of 3D object points and their corresponding 2D projections in each view must be specified.
-Its parameters are:
+calibrateCamera函数估计每个视图的内在摄像机参数和外部参数。 该算法基于[Zhang2000]和[BouguetMCT]。 必须指定3D对象点的坐标及其在每个视图中对应的2D投影。
+参数如下:
 
- - **objectPoints** In the new interface it is a vector of vectors of calibration pattern points in the calibration pattern coordinate space. The outer vector contains as many elements as the number of the pattern views. The points are 3D, but since they are in a pattern coordinate system, then, if the rig is planar, it may make sense to put the model to a XY coordinate plane so that Z-coordinate of each input object point is 0.
- - **imagePoints** It is a vector of vectors of the projections of calibration pattern points.
- - **imageSize** Size of the image used only to initialize the intrinsic camera matrix.
- - **cameraMatrix** Output 3x3 floating-point camera matrix *A = |fx 0 cx| |0 fy cy| |0 0 1|*. If ``CV_CALIB_USE_INTRINSIC_GUESS`` and/or ``CV_CALIB_FIX_ASPECT_RATIO`` are specified, some or all of *fx*, *fy*, *cx*, *cy* must be initialized before calling the function.
- - **distCoeffs** Output vector of distortion coefficients of 4, 5, or 8 elements.
- - **rvecs** Output vector of rotation vectors estimated for each pattern view. That is, each k-th rotation vector together with the corresponding k-th translation vector.
- - **tvecs** Output vector of translation vectors estimated for each pattern view.
+ - **objectPoints** 在新界面中，它是校准图案坐标空间中的校准图案点矢量的向量。 外部向量包含与模式视图数量一样多的元素。 这些点是3D的，但由于它们处于图案坐标系中，因此如果平台是平面的，则将模型放置到XY坐标平面以使每个输入对象点的Z坐标为0是有意义的。
+ - **imagePoints** 它是校准模式点投影向量的向量。
+ - **imageSize** 仅用于初始化内置相机矩阵的图像大小。
+ - **cameraMatrix** 输出3x3浮点相机矩阵* A = | fx 0 cx | | 0 fy cy | | 0 0 1 | *。 如果指定了" CV_CALIB_USE_INTRINSIC_GUESS "或" CV_CALIB_FIX_ASPECT_RATIO "，则在调用函数之前，必须初始化* fx *，* fy *，* cx *，* cy *中的部分或全部。
+ - **distCoeffs** 4，5或8个元素的失真系数的输出向量。
+ - **rvecs** 为每个模式视图估计的旋转矢量的输出矢量。 也就是说，每个第k个旋转矢量与相应的第k个平移矢量一起。
+ - **tvecs** 为每个模式视图估算的平移向量的输出向量。
 
-We ran calibration and got camera's matrix with the distortion coefficients we may want to correct the image using ``undistort`` function:
+我们进行了校准并获得了具有失真系数的相机矩阵，我们可能需要使用``undistort``函数来校正图像：
 
 .. code-block:: java
 
@@ -205,6 +205,6 @@ We ran calibration and got camera's matrix with the distortion coefficients we m
 	undistoredImage = mat2Image(undistored);
     }
 
-The ``undistort`` function transforms an image to compensate radial and tangential lens distortion.
+" undistort "功能可转换图像以补偿径向和切向镜头失真。
 
-The source code of the entire tutorial is available on `GitHub <https://github.com/opencv-java/camera-calibration>`_.
+这个例子的源码在 `GitHub <https://github.com/opencv-java/getting-started/blob/master/FXHelloCV/>`_。

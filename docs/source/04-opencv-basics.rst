@@ -226,8 +226,8 @@ calcHist函数计算一个或多个数组的直方图。每一个归类都是输
     MatOfInt histSize = new MatOfInt(256);
     MatOfFloat histRange = new MatOfFloat(0, 256);
 
-In the RGB case we will need all of the hist defined, in the grayscale case instead we will use just the ``hist_b`` one.
-We are now ready to do the histogram calculation:
+在RGB色彩空间中我们需要定义所有的直方点,而在灰度色彩空间中我们只需要定义 ``hist_b`` 一次就行了。
+现在，我们开始绘制直方图:
 
 .. code-block: java
 
@@ -237,26 +237,26 @@ We are now ready to do the histogram calculation:
 	Imgproc.calcHist(images.subList(2, 3), channels, new Mat(), hist_r, histSize, 	histRange, false);
     }
 
-where ``gray`` is the flag we passed to the ``showHistogram`` method.
+``gray`` 是我们传给 ``showHistogram`` 方法的标志.
 
-Draw the Histogram
+绘制直方图
 ------------------
-Next step is to draw the calculated histogram in our GUI.
-Open the fxml file with Scene Builder and add an ImageView above the "Controls" text in the right of the BP and set its id:
+下一步就是在我们的GUI中绘制计算出的直方图。
+使用 Scene Builder 打开 fxml 文件，并在从BP右侧的控件栏中添加 ImageView 控件并设置ID:
 
 .. code-block:: xml
 
     <ImageView fx:id="histogram" />
 
-Now back to the Controller class. Let's add a global variable to control the just added image view:
+回到控制类中.添加一个全局变量来控制刚刚添加的ImageView:
 
 .. code-block:: java
 
     @FXML
     private ImageView histogram;
 
-and continue to write the ``showHistogram`` method.
-First thing first, let's create an image to display the histogram:
+继续编写 ``showHistogram`` 方法.
+首先，我们创建一个图像来显示直方图:
 
 .. code-block:: java
 
@@ -265,7 +265,7 @@ First thing first, let's create an image to display the histogram:
     int bin_w = (int) Math.round(hist_w / histSize.get(0, 0)[0]);
     Mat histImage = new Mat(hist_h, hist_w, CvType.CV_8UC3, new Scalar(0, 0, 0));
 
-before drawing, we first normalize the histogram so its values fall in the range indicated by the parameters entered:
+在绘制之前，我们首先对直方图进行归一化处理，使其值落在输入参数所指示的范围内:
 
 .. code-block:: java
 
@@ -275,7 +275,7 @@ before drawing, we first normalize the histogram so its values fall in the range
        Core.normalize(hist_r, hist_r, 0, histImage.rows(), Core.NORM_MINMAX, -1, new Mat());
     }
 
-Now we can draw the histogram in our Mat:
+现在我们就可以在我们的图像（Mat）中绘制直方图了:
 
 .. code-block:: java
 
@@ -287,7 +287,7 @@ Now we can draw the histogram in our Mat:
        }
     }
 
-Let's convert the obtained Mat to an Image with our method ``mat2Image`` and update the ImageView with the returned Image:
+让我们用mat2Image方法将获得的Mat转换为图像，并使用图像更新ImageView:
 
 .. code-block:: java
 
@@ -298,4 +298,4 @@ Let's convert the obtained Mat to an Image with our method ``mat2Image`` and upd
 
 .. image:: _static/04-02.png
 
-The source code of the entire tutorial is available on `GitHub <https://github.com/opencv-java/video-basics>`_.
+这个例子的源码在 `GitHub <https://github.com/opencv-java/getting-started/blob/master/FXHelloCV/>`_。

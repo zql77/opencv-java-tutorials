@@ -1,43 +1,43 @@
 =================
-Fourier Transform
+傅里叶变换
 =================
 
-.. note:: We assume that by now you have already read the previous tutorials. If not, please check previous tutorials at `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_. You can also find the source code and resources at `<https://github.com/opencv-java/>`_
+.. note:: 我们现在假设你已经阅读过前面的教程。 如果没有，请查看 `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_的教程。你也可以在 `<https://github.com/opencv-java/>`_相关代码和资源。
 
-Goal
+目标
 ----
-In this tutorial we are going to create a JavaFX application where we can load a picture from our file system and apply to it the *DFT* and the *inverse DFT*.
+本教程中我们将创建一个JavaFX程序，可以从文件系统中加载图片并对其做傅里叶变换和傅里叶逆变换。
 
-What is the Fourier Transform?
+什么是傅里叶变换?
 ------------------------------
-The Fourier Transform will decompose an image into its sinus and cosines components. In other words, it will transform an image from its spatial domain to its frequency domain. The result of the transformation is complex numbers. Displaying this is possible either via a real image and a complex image or via a magnitude and a phase image. However, throughout the image processing algorithms only the magnitude image is interesting as this contains all the information we need about the images geometric structure.
-For this tutorial we are going to use basic gray scale image, whose values usually are between zero and 255. Therefore the Fourier Transform too needs to be of a discrete type resulting in a Discrete Fourier Transform (DFT). The DFT is the sampled Fourier Transform and therefore does not contain all frequencies forming an image, but only a set of samples which is large enough to fully describe the spatial domain image. The number of frequencies corresponds to the number of pixels in the spatial domain image, i.e. the image in the spatial and Fourier domain are of the same size.
+傅里叶变换将图像分解为其正弦和余弦分量。 换句话说，它会将图像从其空间域转换到其频域。 转换的结果是复数。通过实部图像和虚部图像或者通过幅度和相位图像来显示所有的可能。 然而,在图像处理过程中只有幅度图像是有用的，应为他包含了描述图像的所有信息。
+对于本教程，我们将使用基本的灰度图像，其值通常介于0到255之间。因此，傅里叶变换也需要是离散类型，从而产生离散傅立叶变换（DFT）。 DFT是采样的傅立叶变换，因此不包含形成图像的所有频率，而只包含一组足够大的样本以充分描述空间域图像。 频率的数量对应于空间域图像中的像素的数量，即，空间域和傅里叶域中的图像具有相同的尺寸。
 
-What we will do in this tutorial
+在本教程中我们会做什么
 --------------------------------
-In this guide, we will:
- * Load an image from a *file chooser*.
- * Apply the *DFT* to the loaded image and show it.
- * Apply the *iDFT* to the transformed image and show it.
+在这个教程中我们将会:
+ * 从*file chooser*中加载一张图像.
+ * 对加载的图像进行傅里叶变换。
+ * 对变换后的图像进行傅里叶逆变换。
 
-Getting Started
+现在开始
 ---------------
-Let's create a new JavaFX project. In Scene Builder set the windows element so that we have a Border Pane with:
+建立一个新的 JavaFX 工程。在 Scene Builder 中设置窗口元素，获得一个GUI窗口:
 
-- on the **LEFT** an ImageView to show the loaded picture:
+- 在这 **LEFT** ImageView 去加载一张图像:
 
 .. code-block:: xml
 
     <ImageView fx:id="originalImage" />
 
-- on the **RIGHT** two ImageViews one over the other to display the DFT and the iDFT;
+- 在两个ImageView上,一个显示傅里叶变换图像和傅里叶逆变换图像;
 
 .. code-block:: xml
 
     <ImageView fx:id="transformedImage" />
     <ImageView fx:id="antitransformedImage" />
 
-- on the **BOTTOM** three buttons, the first one to load the picture, the second one to apply the DFT and show it, and the last one to apply the anti-transform and show it.
+-设置三个按钮（Button），第一个加载图片，第二个应用DFT并显示它，最后一个应用反变换并显示它。
 
 .. code-block:: xml
 
@@ -45,20 +45,20 @@ Let's create a new JavaFX project. In Scene Builder set the windows element so t
     <Button fx:id="transformButton" alignment="center" text="Apply transformation" onAction="#transformImage" disable="true" />
     <Button fx:id="antitransformButton" alignment="center" text="Apply anti transformation" onAction="#antitransformImage" disable="true" />
 
-The gui will look something like this one:
+这GUI将看起来像这样:
 
 .. image:: _static/06-00.png
 
-Load the file
+加载文件
 -------------
-First of all you need to add to your project a folder ``resources`` with two files in it. One of them is a sine function and the other one is a circular aperture.
-In the Controller file, in order to load the image to our program, we are going to use a *filechooser*:
+首先，你需要在你的项目中添加一个文件夹 "resources" ，其中包含两个图像。 其中一个是正弦函数，另一个是圆形光圈。
+在控制类中，为了将图像加载到我们的程序中，我们将使用* filechooser *：
 
 .. code-block:: java
 
     private FileChooser fileChooser;
 
-When we click the load button we have to set the initial directory of the FC and open the dialog. The FC will return the selected file:
+当我们点击加载按钮时，我们必须设置FC的初始目录并打开对话框。 FC将返回所选文件:
 
 .. code-block:: java
 
@@ -66,16 +66,16 @@ When we click the load button we have to set the initial directory of the FC and
     this.fileChooser.setInitialDirectory(file);
     file = this.fileChooser.showOpenDialog(this.main.getStage());
 
-Once we've loaded the file we have to make sure that it's going to be in grayscale and display the image into the image view:
+一旦我们加载了文件，我们必须确保它将以灰度显示并将图像显示在图像视图中：
 
 .. code-block:: java
 
     this.image = Imgcodecs.imread(file.getAbsolutePath(), Imgcodecs.CV_LOAD_IMAGE_GRAYSCALE);
     this.originalImage.setImage(this.mat2Image(this.image));
 
-Applying the DFT
+进行傅里叶变换
 ----------------
-First of all expand the image to an optimal size. The performance of a DFT is dependent of the image size. It tends to be the fastest for image sizes that are multiple of the numbers two, three and five. Therefore, to achieve maximal performance it is generally a good idea to pad border values to the image to get a size with such traits. The ``getOptimalDFTSize()`` returns this optimal size and we can use the ``copyMakeBorder()`` function to expand the borders of an image:
+首先将图像展开为最佳尺寸。 DFT的性能取决于图像大小。 它往往是图像尺寸的最快速度，是数字2,3和5的倍数。 因此，为了达到最佳性能，通常将边界值填充到图像以获得具有这种特征的大小。 ``getOptimalDFTSize（）``返回这个最佳尺寸，我们可以使用``copyMakeBorder（）``函数来扩展图像的边界:
 
 .. code-block:: java
 
@@ -83,9 +83,9 @@ First of all expand the image to an optimal size. The performance of a DFT is de
     int addPixelCols = Core.getOptimalDFTSize(image.cols());
     Core.copyMakeBorder(image, padded, 0, addPixelRows - image.rows(), 0, addPixelCols - image.cols(),Imgproc.BORDER_CONSTANT, Scalar.all(0));
 
-The appended pixels are initialized with zeros.
+附加像素用零初始化。
 
-The result of the DFT is complex so  we have to make place for both the complex and the real values. We store these usually at least in a float format. Therefore we'll convert our input image to this type and expand it with another channel to hold the complex values:
+傅里叶变化的结果很复杂，所以我们必须为复杂和真实的价值都做好准备。 我们通常至少以浮点格式存储这些数据。 因此，我们会将输入图像转换为此类型，并使用另一个通道来展开以保存复杂值：
 
 .. code-block:: java
 
@@ -94,7 +94,7 @@ The result of the DFT is complex so  we have to make place for both the complex 
     this.planes.add(Mat.zeros(padded.size(), CvType.CV_32F));
     Core.merge(this.planes, this.complexImage);
 
-Now we can apply the DFT and then get the real and the imaginary part from the complex image:
+现在我们可以应用傅里叶变换，然后从复杂图像中获取实部和虚部：
 
 .. code-block:: java
 
@@ -102,14 +102,14 @@ Now we can apply the DFT and then get the real and the imaginary part from the c
     Core.split(complexImage, newPlanes);
     Core.magnitude(newPlanes.get(0), newPlanes.get(1), mag);
 
-Unfortunately the dynamic range of the Fourier coefficients is too large to be displayed on the screen. To use the gray scale values for visualization we can transform our linear scale to a logarithmic one:
+不幸的是，傅立叶系数的动态范围太大而不能显示在屏幕上。 要使用灰度值进行可视化，我们可以将线性比例转换为对数：
 
 .. code-block:: java
 
     Core.add(Mat.ones(mag.size(), CVType.CV_32F), mag);
     Core.log(mag, mag);
 
-Remember, that at the first step, we expanded the image? Well, it's time to throw away the newly introduced values. For visualization purposes we may also rearrange the quadrants of the result, so that the origin (zero, zero) corresponds with the image center:
+请记住，在第一步，我们扩大了图像？ 那么，是时候抛弃新引入的值了。 为了可视化目的，我们还可以重新排列结果的象限，以便原点（零点，零点）与图像中心对应:
 
 .. code-block:: java
 
@@ -131,21 +131,21 @@ Remember, that at the first step, we expanded the image? Well, it's time to thro
     q2.copyTo(q1);
     tmp.copyTo(q2);
 
-Now we have to normalize our values by using the ``normalize()`` function in order to transform the matrix with float values into a viewable image form:
+现在我们必须使用 ``normalize()`` 函数来标准化我们的值，以便将浮点值的矩阵转换为可见的图像形式:
 
 .. code-block:: java
 
     Core.normalize(mag, mag, 0, 255, Core.NORM_MINMAX);
 
-The last step is to show the magnitude image in the ImageView:
+最后一步是在ImageView中显示幅度图像：
 
 .. code-block:: java
 
     this.transformedImage.setImage(this.mat2Image(magnitude));
 
-Applying the inverse DFT
+进项傅里叶逆变换
 ------------------------
-To apply the inverse DFT we simply use the ``idft()`` function, extract the real values from the complex image with the ``split()`` function, and normalize the result with ``normalize()``:
+要使用傅里叶逆变换，我们只需使用``idft（）``函数，用``split（）``函数从复杂图像中提取真实值，并用``normalize（）``归一化结果:
 
 .. code-block:: java
 
@@ -154,26 +154,26 @@ To apply the inverse DFT we simply use the ``idft()`` function, extract the real
     Core.split(this.complexImage, this.planes);
     Core.normalize(this.planes.get(0), restoredImage, 0, 255, Core.NORM_MINMAX);
 
-Finally we can show the result on the proper ImageView:
+最后，我们可以在适当的ImageView上显示结果：
 
 .. code-block:: java
 
     this.antitransformedImage.setImage(this.mat2Image(restoredImage));
 
-Analyzing the results
+分析结果
 ---------------------
 - *sinfunction.png*
 
 .. image:: _static/06-01.png
 
-The image is a horizontal sine of 4 cycles. Notice that the DFT just has a single component, represented by 2 bright spots symmetrically placed about the center of the DFT image. The center of the image is the origin of the frequency coordinate system. The x-axis runs left to right through the center and represents the horizontal component of frequency. The y-axis runs bottom to top through the center and represents the vertical component of frequency. There is a dot at the center that represents the (0,0) frequency term or average value of the image. Images usually have a large average value (like 128) and lots of low frequency information so FT images usually have a bright blob of components near the center. High frequencies in the horizontal direction will cause bright dots away from the center in the horizontal direction.
+图像是4个周期的水平正弦图。 请注意，DFT只有一个分量，由对称放置在DFT图像中心的2个亮点表示。 图像的中心是频率坐标系的原点。 x轴从左到右贯穿中心，代表频率的水平分量。 y轴从底部到顶部贯穿中心，代表频率的垂直分量。 中心有一个点表示图像的（0,0）频率项或平均值。 图像通常具有较大的平均值（如128）和大量的低频信息，因此FT图像通常在中心附近有明亮的组件。 水平方向的高频率将导致亮点离开水平方向的中心。
 
 - *circle.png*
 
 .. image:: _static/06-02.png
 
-In this case we have a circular aperture, and what is the Fourier transform of a circular aperture? The diffraction disk and rings. A large aperture produces a compact transform, instead a small one produces a larger Airy pattern; thus the disk is greater if aperture is smaller; according to Fourier properties, from the center to the middle of the first dark ring the distance is *(1.22 x N) / d*; in this case N is the size of the image, and d is the diameter of the circle.
-An *Airy disk* is the bright center of the diffraction pattern created from a circular aperture ideal
-optical system; nearly half of the light is contained in a diameter of *1.02 x lamba x f_number*.
+在这种情况下，我们有一个圆形光圈，什么是圆形光圈的傅里叶变换？ 衍射盘和环。 大光圈会产生紧凑的变换，而小光圈会产生更大的艾里图案; 因此光圈越小光盘越大; 根据傅立叶特性，从第一个暗环的中心到中间，距离是*（1.22 x N）/ d *; 在这种情况下，N是图像的大小，d是圆的直径。
+艾里斑是圆孔理想衍射的中心亮斑。
+光学系统; 几乎一半的光被包含在直径* 1.02 x 波长 x 焦距 *的亮斑中。
 
-The source code of the entire tutorial is available on `GitHub <https://github.com/opencv-java/fourier-transform>`_.
+这个例子的源码在 `GitHub <https://github.com/opencv-java/getting-started/blob/master/FXHelloCV/>`_。

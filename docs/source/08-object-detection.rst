@@ -1,34 +1,34 @@
 =================
-Object Detection
+对象检测
 =================
 
-.. note:: We assume that by now you have already read the previous tutorials. If not, please check previous tutorials at `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_. You can also find the source code and resources at `<https://github.com/opencv-java/>`_
-
+.. note:: 我们现在假设你已经阅读过前面的教程。 如果没有，请查看 `<http://opencv-java-tutorials.readthedocs.org/en/latest/index.html>`_的教程。你也可以在 `<https://github.com/opencv-java/>`_相关代码和资源。
 Goal
 ----
-In this tutorial we are going to identify and track one or more tennis balls. It performs the detection of the tennis balls upon a webcam video stream by using the color range of the balls, erosion and dilation, and the findContours method.
 
-Morphological Image Processing
+在本教程中，我们将识别并追踪一个或多个网球。 它通过使用球的颜色范围，侵蚀和膨胀以及findContours方法在网络摄像头视频流中执行网球检测。
+
+形态学图像处理
 ------------------------------
-Is a collection of non-linear operations related to the morphology of features in an image. The morphological operations rely only on the relative ordering of pixel values and not on their numerical values.
-Some of the fundamental morphological operations are dilation and erosion. Dilation causes objects to dilate or grow in size adding pixels to the boundaries of objects in an image and therefore the holes within different regions become smaller. The dilation allows, for example, to join parts of an object that appear separated.
-Erosion causes objects to shrink by stripping away layers of pixels from the boundaries of objects in an image and therefore the holes within different regions become larger. The erosion can be used to remove noise or small errors from the image due to the scanning process.
-The opening is a compound operation that consist in an erosion followed by a dilation using the same structuring element for both operations. This operation removes small objects from the foreground of an image and can be used to find things into which a specific structuring element can fit. The opening can open up a gap between objects connected by a thin bridge of pixels. Any regions that have survived the erosion are restored to their original size by the dilation.
+是与图像中的特征形态相关的非线性操作的集合。 形态学操作仅依赖于像素值的相对排序而不依赖于其数值。
+一些基本的形态学操作是扩张和侵蚀。 膨胀会导致对象扩大或增大，从而将像素添加到图像中对象的边界，因此不同区域内的空洞会变小。 例如，膨胀允许连接看似分离的对象的部分。
+通过从图像中的物体边界剥离像素层，侵蚀会导致物体收缩，因此不同区域内的空洞会变大。 由于扫描过程，侵蚀可用于消除图像中的噪音或小错误。
+开放是一个复合操作，它包含一个侵蚀和一个扩展，两个操作使用相同的结构元素。 此操作可从图像的前景中移除小对象，并可用于查找特定结构元素可适用的东西。 开口可以打开通过像素的薄桥连接的物体之间的间隙。 任何受侵蚀的地区都可以通过扩张恢复原有的规模。
 
 
-What we will do in this tutorial
+本教程中我们将要进行的操作
 --------------------------------
-In this guide, we will:
+在本教程中，我们将会:
 
- * Insert 3 groups of sliders to control the quantity of HSV (Hue, Saturation and Value) of the image.
- * Capture and process the image from the web cam removing noise in order to facilitate the object recognition.
- * Finally using morphological operator such as erosion and dilation we can identify the objects using the contornous obtained after the image processing.
+ * 插入3组滑块以控制图像的HSV（色调，饱和度和值）的大小。
+ * 捕获并处理网络摄像头中的图像以消除噪音，以促进对象识别。
+ * 最后使用形态学算子如侵蚀和膨胀，我们可以使用图像处理后得到的结果来识别物体。
 
-Getting Started
+开始
 ---------------
-Let's create a new JavaFX project. In Scene Builder we set the window elements so that we have a Border Pane with:
+我们来创建一个新的JavaFX项目。 在场景生成器中，我们设置了窗口元素，以便我们有一个边框窗格：
 
-- on RIGHT CENTER we can add a VBox. In this one we are going to need 6 sliders, the first couple will control hue, the next one saturation and finally brightness, with these sliders is possible to change the values of the HSV image.
+-在RIGHT CENTRE上，我们可以添加一个VBox。 在这一个中，我们将需要6个滑块，第一对将控制色调，下一个饱和度和最终亮度，使用这些滑块可以更改HSV图像的值。
 
 	.. code-block:: xml
 
@@ -46,7 +46,7 @@ Let's create a new JavaFX project. In Scene Builder we set the window elements s
 		<Slider fx:id="valueStop" min="0" max="255" value="255" blockIncrement="1" />
 
 
-- in the CENTER. we are going to put three ImageViews, the first one shows normal image from the web cam stream, the second one will show mask image and the last one will show morph image. The HBox is used to normal image and VBox to put the other ones.
+- 在中心。 我们将放置三个ImageViews，第一个显示来自网络摄像头流的正常图像，第二个显示蒙版图像，最后一个显示变形图像。 HBox用于正常图像，VBox用于放置其他图像。
 
 	.. code-block:: xml
 
@@ -61,7 +61,7 @@ Let's create a new JavaFX project. In Scene Builder we set the window elements s
 			</VBox>
 		</HBox>
 
-- on the BOTTOM we can add the usual button to start/stop the stream and the current values HSV selected with the sliders.
+- 在BOTTOM上，我们可以添加通常的按钮来启动/停止视频流，并使用滑块选择当前的HSV值。
 
 	.. code-block:: xml
 
@@ -69,18 +69,18 @@ Let's create a new JavaFX project. In Scene Builder we set the window elements s
 		<Separator />
 		<Label fx:id="hsvCurrentValues" />
 
-The gui will look something like this one:
+GUI看起来像这样：
 
 .. image:: _static/09-00.png
 
 
-Image processing
+图像处理
 ----------------
-In order to use the morphological operators and obtain good results we need to process the image and remove the noise, change the image to HSV allows to get the contours easily.
+为了使用形态学算子并获得良好的结果，我们需要处理图像并消除噪音，将图像更改为HSV可以轻松获得轮廓。
 
-- ``Remove noise``
-	We can remove some noise of the image using the method blur of the Imgproc class and then apply a conversion to
-	HSV in order to facilitate the process of object recognition.
+- ``去除噪声``
+	我们可以使用Imgproc类的方法blur去除图像的一些噪点，然后将转换应用于
+	HSV为了促进对象识别的过程。
 
 	.. code-block:: java
 
@@ -97,9 +97,9 @@ In order to use the morphological operators and obtain good results we need to p
 
 
 
-- ``Values of HSV image``
-	With the sliders we can modify the values of the HSV Image, the image will be updtated in real time,
-	that allows to increase or decrease the capactity to recognize object into the image. .
+- ``HSV图像的大小``
+	我们可以使用滑块修改HSV图像的值，图像将实时更新，
+	允许增加或减少识别物体进入图像的能力。
 
 	.. code-block:: java
 
@@ -123,9 +123,9 @@ In order to use the morphological operators and obtain good results we need to p
 		this.onFXThread(maskProp, this.mat2Image(mask));
 
 
-Morphological Operators
+形态学操作员
 -----------------------
-First of all we need to define the two matrices of morphological operator dilation and erosion, then with the methods erode and dilate of the class Imgproc we process the image twice in each operation, the result is the matrix morphOutput that will be the partial output.
+首先，我们需要定义形态算子扩张和侵蚀的两个矩阵，然后使用类Imgproc的侵蚀和扩张方法在每次操作中对图像进行两次处理，结果是矩阵morphOutput将成为局部输出。
 
 
 	.. code-block:: java
@@ -146,9 +146,9 @@ First of all we need to define the two matrices of morphological operator dilati
 
 
 
-Object tracking
+对象跟踪
 ------------------
-With the partial output obtained before we can use the method findContours of the class Imgpoc to get a matrix with the mapping of the objects recognized, then we draw the contours of these objects.
+通过在我们使用类Imgpoc的findContours方法获得的部分输出获得一个矩阵与识别的对象的映射，然后我们绘制这些对象的轮廓。
 
 
 	.. code-block:: java
@@ -171,10 +171,10 @@ With the partial output obtained before we can use the method findContours of th
 		}
 
 
-Finally we can get this results:
+最后我们将会得到这样的结果：
 
 .. image:: _static/09-01.png
 
 .. image:: _static/09-02.png
 
-The source code of the entire tutorial is available on `GitHub <https://github.com/opencv-java/object-detection>`_.
+这个例子的源码在 `GitHub <https://github.com/opencv-java/getting-started/blob/master/FXHelloCV/>`_。
