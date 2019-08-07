@@ -6,4 +6,7 @@ OpenCV 的Java教程
 ## 说明：
 这是我第一次翻译项目，有什么不足欢迎大家提意见，我会努力的改进。
 
- 
+## reStructuredText规范
+ ```
+ http://docutils.sourceforge.net/docs/user/rst/quickref.html
+ ```
